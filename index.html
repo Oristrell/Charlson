@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>Charlson Comorbidity Index Calculator</title>
+
+<style>
+body {
+  background-color: #87CEEB;
+  font-family: Arial, sans-serif;
+  margin: 0;
+  padding: 40px 0;
+}
+
+.container {
+  background-color: #fffde7;
+  width: 850px;
+  max-width: 95%;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+  margin: 0 auto;
+  text-align: left;
+}
+
+.title {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  color: #3366cc;
+  margin-bottom: 30px;
+  border: 2px solid #3366cc;
+  border-radius: 8px;
+  background-color: #e6f0ff;
+  padding: 15px 20px;
+  font-size: 24px;
+  font-weight: bold;
+}
+
+.logo {
+  max-width: 60px;
+  height: auto;
+}
+
+.inner {
+  max-width: 700px;
+  margin: 0 auto;
+  padding-left: 200px;
+  padding-right: 20px;
+}
+
+.section {
+  margin-bottom: 20px;
+}
+
+.result {
+  font-size: 20px;
+  font-weight: bold;
+  margin-top: 20px;
+}
+
+.badge {
+  padding: 10px 15px;
+  border-radius: 8px;
+  display: inline-block;
+  margin-top: 10px;
+  font-weight: bold;
+}
+
+.low { background-color: #4CAF50; color: white; }
+.moderate { background-color: #FFC107; color: black; }
+.high { background-color: #FF9800; color: white; }
+.veryhigh { background-color: #F44336; color: white; }
+
+button {
+  padding: 10px 20px;
+  font-size: 16px;
+  border-radius: 6px;
+  border: none;
+  cursor: pointer;
+  margin-top: 10px;
+  margin-right: 10px;
+  background-color: #3366cc;
+  color: white;
+}
+
+button:hover {
+  opacity: 0.85;
+}
+
+.reference {
+  font-size: 12px;
+  margin-top: 40px;
+  color: #555;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+  <h2 class="title">
+    <img src="LogOM5.png" alt="Logo" class="logo">
+    Calculadora de l'Índex de Comorbiditat de Charlson (CCI)
+  </h2>
+
+  <div class="inner">
+
+    <div class="section">
+      <label>Edat:</label>
+      <input type="number" id="age">
+      <small>(+1 punt per cada dècada > 50 anys)</small>
+    </div>
+
+    <div class="section">
+      <strong>Comorbiditats</strong><br>
+
+      <label><input type="checkbox" value="1" class="cci"> Infart de miocardi previ (+1)</label><br>
+      <label><input type="checkbox" value="1" class="cci"> Insuficiència cardíaca congestiva (+1)</label><br>
+      <label><input type="checkbox" value="1" class="cci"> Malaltia vascular perifèrica (+1)</label><br>
+      <label><input type="checkbox" value="1" class="cci"> Ictus o AIT (+1)</label><br>
+      <label><input type="checkbox" value="1" class="cci"> Demència (+1)</label><br>
+      <label><input type="checkbox" value="1" class="cci"> MPOC (+1)</label><br>
+      <label><input type="checkbox" value="1" class="cci"> Malaltia del teixit connectiu (+1)</label><br>
+      <label><input type="checkbox" value="1" class="cci"> Úlcera pèptica (+1)</label><br>
+      <label><input type="checkbox" value="1" class="cci"> Hepatopatia lleu (+1)</label><br>
+      <label><input type="checkbox" value="1" class="cci"> Diabetis sense complicacions (+1)</label><br>
+
+      <label><input type="checkbox" value="2" class="cci"> Diabetis amb complicacions (+2)</label><br>
+      <label><input type="checkbox" value="2" class="cci"> Hemiplègia (+2)</label><br>
+      <label><input type="checkbox" value="2" class="cci"> Malaltia renal moderada-greu (+2)</label><br>
+      <label><input type="checkbox" value="2" class="cci"> Tumor sòlid sense metàstasi (+2)</label><br>
+      <label><input type="checkbox" value="2" class="cci"> Leucèmia (+2)</label><br>
+      <label><input type="checkbox" value="2" class="cci"> Limfoma (+2)</label><br>
+
+      <label><input type="checkbox" value="3" class="cci"> Hepatopatia moderada-greu (+3)</label><br>
+
+      <label><input type="checkbox" value="6" class="cci"> Tumor metastàtic (+6)</label><br>
+      <label><input type="checkbox" value="6" class="cci"> SIDA (+6)</label><br>
+    </div>
+
+    <button onclick="calculate()">Calcular CCI</button>
+    <button onclick="resetForm()">Netejar</button>
+
+    <div class="result" id="result"></div>
+    <div id="riskClass"></div>
+
+    <div class="reference">
+      Charlson ME et al. A new method of classifying prognostic comorbidity.
+      J Chronic Dis. 1987;40(5):373–383.
+    </div>
+
+  </div>
+</div>
+
+<script>
+
+function calculate() {
+
+  let score = 0;
+
+  // Age adjustment
+  let age = parseInt(document.getElementById("age").value);
+  if (!isNaN(age) && age > 50) {
+    score += Math.floor((age - 50) / 10) + 1;
+  }
+
+  // Add comorbidities
+  let boxes = document.querySelectorAll(".cci:checked");
+  boxes.forEach(box => score += parseInt(box.value));
+
+  document.getElementById("result").innerHTML = "CCI Score: " + score;
+
+  // Risk interpretation
+  let risk = "";
+  let style = "";
+
+  if (score <= 2) {
+    risk = "Baix risc (Supervivència 10 anys > 90%)";
+    style = "low";
+  } else if (score <= 4) {
+    risk = "Risc moderat";
+    style = "moderate";
+  } else if (score <= 6) {
+    risk = "Alt risc";
+    style = "high";
+  } else {
+    risk = "Molt alt risc";
+    style = "veryhigh";
+  }
+
+  document.getElementById("riskClass").innerHTML =
+    "<div class='badge " + style + "'>" + risk + "</div>";
+}
+
+function resetForm() {
+  document.getElementById("age").value = "";
+  document.querySelectorAll("input[type='checkbox']").forEach(box => box.checked = false);
+  document.getElementById("result").innerHTML = "";
+  document.getElementById("riskClass").innerHTML = "";
+}
+
+</script>
+
+</body>
+</html>
